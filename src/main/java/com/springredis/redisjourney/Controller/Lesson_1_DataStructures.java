@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -14,10 +15,25 @@ public class Lesson_1_DataStructures {
     private RedisTemplate redisTemplate;
 
     @PostConstruct
-     public void init() {
+    public void init() {
         getSetDS();
         incrDecrDS();
         hsetHgetHgetAllDS();
+        saddSismemberDS();
+    }
+
+    private void saddSismemberDS() {
+        Set<String> keys = redisTemplate.keys("*");
+        for (String key : keys) {
+            System.out.println("Key: " + key);
+        }
+        // online visitors
+        redisTemplate.opsForSet().add("online_visitors", "user1", "user2", "user3");
+        System.out.println("Online visitors: " + redisTemplate.opsForSet().members("online_visitors"));
+
+        // check if online
+        System.out.println("Is user1 online? " + redisTemplate.opsForSet().isMember("online_visitors", "user1"));
+        System.out.println("Is user4 online? " + redisTemplate.opsForSet().isMember("online_visitors", "user4"));
     }
 
     private void hsetHgetHgetAllDS() {
@@ -36,9 +52,9 @@ public class Lesson_1_DataStructures {
         HGETALL cart:101
         */
         // HSET - Add Product to cart
-        redisTemplate.opsForHash().put("cart:101", "1001", 2); // Product 1001 -> QTY 2
-        redisTemplate.opsForHash().put("cart:101", "1002", 2); // Product 1002 -> QTY 2
-        redisTemplate.opsForHash().put("cart:101", "1003", 5); // Product 1003 -> QTY 5
+        redisTemplate.opsForHash().put("cart:101", "1001", "2"); // Product 1001 -> QTY 2
+        redisTemplate.opsForHash().put("cart:101", "1002", "2"); // Product 1002 -> QTY 2
+        redisTemplate.opsForHash().put("cart:101", "1003", "5"); // Product 1003 -> QTY 5
         // Get quantity of a specific product in the cart
         Object productQty = redisTemplate.opsForHash().get("cart:101", "1002");
         System.out.println("Quantity of product 1002 in cart: " + productQty);
@@ -62,6 +78,8 @@ public class Lesson_1_DataStructures {
         System.out.println("User age: " + redisTemplate.opsForHash().get("user:101", "age"));
         System.out.println("User city: " + redisTemplate.opsForHash().get("user:101", "city"));
 
+        System.out.println("User profile: " + redisTemplate.opsForHash().entries("user:1001"));
+
         redisTemplate.opsForHash().entries("user:1001");
     }
 
@@ -82,7 +100,7 @@ public class Lesson_1_DataStructures {
         // site visitors
         siteVisitorCount();
         // rate limit
-        for(int i = 0; i < 7; i++) {
+        for (int i = 0; i < 7; i++) {
             rateLimitUserPerRequest(1);
         }
     }
@@ -136,8 +154,6 @@ public class Lesson_1_DataStructures {
             System.out.println("Rate limit exceeded for user: " + userId);
         }
     }
-
-
 
 
 }
